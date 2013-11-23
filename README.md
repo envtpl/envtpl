@@ -9,7 +9,7 @@ This is a Python script that does basic parameter substitution from the command 
 
 If you pipe that file through envtpl.py, without any environment variables
 
-    ./envtpl.py < file1.py > file1.py
+    ./envtpl.py < file1.py
 
 you get
 
@@ -19,7 +19,7 @@ you get
 
 If you define the FOO and BAR environment variables
 
-    FOO=foo BAR=bazzzz ./envtpl.py < file1.py > file1.py
+    FOO=foo BAR=bazzzz ./envtpl.py < file1.py
 
 you get
 
