@@ -6,7 +6,7 @@ def read(fname):
 
 setup(
     name='envtpl',
-    version='0.1.0',
+    version='0.1.1',
     packages=['envtpl'],
     entry_points={
         'console_scripts': ['envtpl = envtpl.envtpl:main']

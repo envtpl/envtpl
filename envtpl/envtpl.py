@@ -34,13 +34,13 @@ def main():
     try:
         process_file(args.input_file, args.output_file, variables, not args.allow_missing, not args.keep_template)
     except (Fatal, IOError), e:
-        sys.stderr.write('%s\n', e.message)
+        sys.stderr.write('Error: %s\n' % str(e))
         sys.exit(1)
 
     sys.exit(0)
 
 def process_file(input_filename, output_filename, variables, die_on_missing_variable, remove_template):
-    if not input_filename and remove_template:
+    if not input_filename and not remove_template:
         raise Fatal('--keep-template only makes sense if you specify an input file')
 
     if input_filename and not output_filename:
@@ -57,18 +57,22 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if output_filename:
         output_file = open(output_filename, 'w')
     else:
-        output_file = sys.stdin
+        output_file = sys.stdout
 
+    output = ''
     for line in input_file:
-        parsed_line = parse_line(line, variables, die_on_missing_variable)
-        output_file.write(parsed_line)
+        output += parse_line(line, variables, die_on_missing_variable)
 
     if input_file != sys.stdin:
         input_file.close()
-    if output_file != sys.stdout:
-        output_file.close()
 
-    if remove_template:
+    if output_filename:
+        with open(output_filename, 'w') as f:
+            f.write(output)
+    else:
+        sys.stdout.write(output)
+
+    if input_filename and remove_template:
         os.unlink(input_filename)
 
 def parse_line(line, variables, die_on_missing_variable):
