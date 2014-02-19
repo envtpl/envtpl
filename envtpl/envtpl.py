@@ -54,10 +54,6 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
         input_file = open(input_filename, 'r')
     else:
         input_file = sys.stdin
-    if output_filename:
-        output_file = open(output_filename, 'w')
-    else:
-        output_file = sys.stdout
 
     output = ''
     for line in input_file:
@@ -66,7 +62,7 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if input_file != sys.stdin:
         input_file.close()
 
-    if output_filename:
+    if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
             f.write(output)
     else:
