@@ -78,7 +78,7 @@ To me, that's a bit cleaner than http://blog.james-carr.org/2013/09/04/parameter
 
 setup(
     name='envtpl',
-    version='0.1.2',
+    version='0.1.3',
     packages=['envtpl'],
     entry_points={
         'console_scripts': ['envtpl = envtpl.envtpl:main']
