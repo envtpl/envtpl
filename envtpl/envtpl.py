@@ -30,20 +30,25 @@ def main():
     )
     args = parser.parse_args()
 
-    input_filename = args.input_file
-    output_filename = args.output_file
-    die_on_missing_variable = not args.allow_missing
-    remove_template = not args.keep_template
+    variables = os.environ
+    try:
+        process_file(args.input_file, args.output_file, variables, not args.allow_missing, not args.keep_template)
+    except (Fatal, IOError), e:
+        sys.stderr.write('%s\n', e.message)
+        sys.exit(1)
 
+    sys.exit(0)
+
+def process_file(input_filename, output_filename, variables, die_on_missing_variable, remove_template):
     if not input_filename and remove_template:
-        die('--keep-template only makes sense if you specify an input file')
+        raise Fatal('--keep-template only makes sense if you specify an input file')
 
     if input_filename and not output_filename:
         if not input_filename.endswith(EXTENSION):
-            die('If no output filename is given, input filename must end in %s' % EXTENSION)
+            raise Fatal('If no output filename is given, input filename must end in %s' % EXTENSION)
         output_filename = input_filename[:-len(EXTENSION)]
         if not output_filename:
-            die('Output filename is empty')
+            raise Fatal('Output filename is empty')
 
     if input_filename:
         input_file = open(input_filename, 'r')
@@ -54,7 +59,9 @@ def main():
     else:
         output_file = sys.stdin
 
-    process_file(input_file, output_file, die_on_missing_variable)
+    for line in input_file:
+        parsed_line = parse_line(line, variables, die_on_missing_variable)
+        output_file.write(parsed_line)
 
     if input_file != sys.stdin:
         input_file.close()
@@ -63,16 +70,6 @@ def main():
 
     if remove_template:
         os.unlink(input_filename)
-
-    sys.exit(0)
-
-def process_file(input_file, output_file, die_on_missing_variable):
-    for line in input_file:
-        try:
-            parsed_line = parse_line(line, os.environ, die_on_missing_variable)
-        except MissingVariable, e:
-            die(e.message)
-        output_file.write(parsed_line)
 
 def parse_line(line, variables, die_on_missing_variable):
     while True:
@@ -89,20 +86,15 @@ def parse_line(line, variables, die_on_missing_variable):
                 value = groups['default']
             else:
                 if die_on_missing_variable:
-                    raise MissingVariable(name)
+                    raise Fatal('Missing environment variable: %s' % name)
                 else:
                     value = ''
         line = line[:match.start()] + value + line[match.end():]
 
     return line
 
-def die(message):
-    sys.stderr.write('%s\n', message)
-    sys.exit(1)
-
-class MissingVariable(Exception):
-    def __init__(self, name):
-        super(MissingVariable, self).__init__('Missing environment variable: %s' % name)
+class Fatal(Exception):
+    pass
 
 if __name__ == '__main__':
     main()
