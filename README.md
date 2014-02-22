@@ -1,4 +1,4 @@
-EnvTpl
+envtpl
 ======
 
 _Render jinja2 templates on the command line using shell environment variables_
@@ -72,7 +72,7 @@ By default, envtpl will **delete** the input template file. You can keep it by p
 What's the point?
 -----------------
 
-I use this script quite a lot in Docker images. Usually I'll have the CMD execute some file, like /bin/start.sh that sets up the runtime configuration for the container by building configurations from environment variables. A redis example could look like this
+I use this script quite a lot in Docker images. Usually I'll have the CMD execute some file, like /bin/start.sh, that sets up the runtime configuration for the container by inserting environment variables into config files before starting the main process. A redis example could look like this
 
     #!/bin/bash
     # start.sh
