@@ -3,66 +3,45 @@ import unittest2 as unittest
 import os
 import envtpl
 
-class TestParseLine(unittest.TestCase):
+class TestRender(unittest.TestCase):
 
     def test_empty(self):
-        line = ''
-        parsed = envtpl.parse_line(line, {}, False)
-        self.assertEquals(parsed, line)
+        self.assertEquals(envtpl.render('', {}, True), '')
 
-    def test_no_vars(self):
-        line = 'foo bar'
-        parsed = envtpl.parse_line(line, {}, False)
-        self.assertEquals(parsed, line)
+    def test_die_on_missing(self):
+        self.assertRaises(envtpl.Fatal, envtpl.render, '{{ FOO }}', {}, True)
 
-    def test_missing_no_default(self):
-        line = '{{ FOO }}'
-        parsed = envtpl.parse_line(line, {}, False)
-        self.assertEquals(parsed, '')
+    def test_dont_die_on_missing(self):
+        self.assertEquals(envtpl.render('{{ FOO }}', {}, False), '')
+
+    def test_defaults(self):
+        self.assertEquals(envtpl.render('{{ FOO | default("abc") }}', {}, True), 'abc')
+        self.assertEquals(envtpl.render('{{ FOO | default("abc") }}', {'FOO': 'def'}, True), 'def')
+
+    def test_quoted(self):
+        source = '''
+foo = {{ FOO | default(123) }}
+bar = "{{ BAR | default("abc") }}"'''
+        expected = '''
+foo = 456
+bar = "abc"'''
+        self.assertEquals(envtpl.render(source, {'FOO': 456}, True), expected)
+
+    def test_if_block(self):
+        source = '''
+{% if BAZ is defined %}
+foo = 123
+{% else %}
+foo = 456
+{% endif %}
+bar = "abc"'''
+        expected = '''
+
+foo = 456
+
+bar = "abc"'''
+        self.assertEquals(envtpl.render(source, {}, True), expected)
         
-    def test_missing_default(self):
-        line = '{{ FOO|foo }}'
-        parsed = envtpl.parse_line(line, {}, False)
-        self.assertEquals(parsed, 'foo')
-
-    def test_missing_context(self):
-        line = 'abc {{ FOO }} def'
-        parsed = envtpl.parse_line(line, {}, False)
-        self.assertEquals(parsed, 'abc  def')
-        
-    def test_missing_die(self):
-        line = '{{ FOO }}'
-        self.assertRaises(envtpl.Fatal, envtpl.parse_line, line, {}, True)
-
-    def test_only_var(self):
-        line = '{{ FOO }}'
-        parsed = envtpl.parse_line(line, {'FOO': 'foo'}, False)
-        self.assertEquals(parsed, 'foo')
-
-    def test_context(self):
-        line = 'abc {{ FOO }} def'
-        parsed = envtpl.parse_line(line, {'FOO': 'foo'}, False)
-        self.assertEquals(parsed, 'abc foo def')
-
-    def test_multiple(self):
-        line = '{{ FOO }} {{ BAR }}'
-        parsed = envtpl.parse_line(line, {'FOO': 'foo', 'BAR': 'bar'}, False)
-        self.assertEquals(parsed, 'foo bar')
-
-    def test_multiple_context(self):
-        line = 'abc {{ FOO }} def {{ BAR }} ghi'
-        parsed = envtpl.parse_line(line, {'FOO': 'foo', 'BAR': 'bar'}, False)
-        self.assertEquals(parsed, 'abc foo def bar ghi')
-
-    def test_no_spaces(self):
-        line = 'abc{{FOO|foo}}{{BAR}}def'
-        parsed = envtpl.parse_line(line, {'BAR': 'bar'}, False)
-        self.assertEquals(parsed, 'abcfoobardef')
-
-    def test_many_spaces(self):
-        line = 'abc  {{  FOO  |  foo  }}  {{  BAR  }}  def'
-        parsed = envtpl.parse_line(line, {'BAR': 'bar'}, False)
-        self.assertEquals(parsed, 'abc  foo  bar  def')
 
 class TestFiles(unittest.TestCase):
 
@@ -89,14 +68,12 @@ class TestFiles(unittest.TestCase):
             f.write(
 '''abc {{ FOO }} 123
 frogs will be frogs
-{{    BAR|456}}
-'''
+{{    BAR | default("456")}}'''
             )
 
         expected = '''abc  123
 frogs will be frogs
-456
-'''
+456'''
         envtpl.process_file(tpl_filename, None, {}, False, True)
         with open(filename, 'r') as f:
             self.assertEquals(f.read(), expected)
@@ -111,14 +88,12 @@ frogs will be frogs
             f.write(
 '''abc {{ FOO }} 123
 frogs will be frogs
-{{    BAR|456}}
-'''
+{{    BAR|default("456")}}'''
             )
 
         expected = '''abc --- 123
 frogs will be frogs
-+++
-'''
++++'''
         envtpl.process_file(tpl_filename, None, {'FOO': '---', 'BAR': '+++'}, False, True)
         with open(filename, 'r') as f:
             self.assertEquals(f.read(), expected)

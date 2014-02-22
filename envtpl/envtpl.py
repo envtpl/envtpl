@@ -1,7 +1,26 @@
+'''
+envtpl - jinja2 template rendering using shell environment variables
+Copyright (C) 2014  Andreas Jansson
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import os
 import sys
 import re
 import argparse
+import jinja2
 
 EXTENSION = '.tpl'
 REGEX = re.compile(r'\{\{ *(?P<name>[^| ]+)(?: *\| *(?P<default>[^ \}]*))? *\}\}')
@@ -51,16 +70,12 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
             raise Fatal('Output filename is empty')
 
     if input_filename:
-        input_file = open(input_filename, 'r')
+        with open(input_filename, 'r') as f:
+            source = f.read()
     else:
-        input_file = sys.stdin
+        source = sys.stdin.read()
 
-    output = ''
-    for line in input_file:
-        output += parse_line(line, variables, die_on_missing_variable)
-
-    if input_file != sys.stdin:
-        input_file.close()
+    output = render(source, variables, die_on_missing_variable)
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
@@ -71,27 +86,22 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if input_filename and remove_template:
         os.unlink(input_filename)
 
-def parse_line(line, variables, die_on_missing_variable):
-    while True:
-        match = REGEX.search(line)
-        if not match:
-            break
+def render(source, variables, die_on_missing_variable):
+    if die_on_missing_variable:
+        undefined = jinja2.StrictUndefined
+    else:
+        undefined = jinja2.Undefined
 
-        groups = match.groupdict()
-        name = groups['name']
-        if name in variables:
-            value = variables[name]
-        else:
-            if groups['default']:
-                value = groups['default']
-            else:
-                if die_on_missing_variable:
-                    raise Fatal('Missing environment variable: %s' % name)
-                else:
-                    value = ''
-        line = line[:match.start()] + value + line[match.end():]
+    try:
+        template = jinja2.Template(source, undefined=undefined)
+    except jinja2.TemplateSyntaxError, e:
+        raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
+    try:
+        output = template.render(**variables)
+    except jinja2.UndefinedError, e:
+        raise Fatal(e)
 
-    return line
+    return output
 
 class Fatal(Exception):
     pass

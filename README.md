@@ -1,67 +1,78 @@
 EnvTpl
 ======
 
-_Simple parameter substitution using environment variables_
+_Render jinja2 templates on the command line using shell environment variables_
 
 Installation
 ------------
 
     pip install envtpl
 
-Usage
------
+How-to
+------
 
-This is a Python script that does basic parameter substitution from the command line. For example, if you have a file called file1.py.tpl that looks like
+Say you have a configuration file called whatever.conf that looks like this
 
-    # file1.py
-    my_first_string = '{{ FOO }}'
-    my_second_string = '{{ BAR|def }}'
+    foo = 123
+    bar = "abc"
 
-If you pipe that file through envtpl.py, with FOO defined in the shell
+You can use envtpl to set `foo` and `bar` from the command line by creating a file called whatever.conf.tpl
 
-    FOO=abc envtpl < file1.py.tpl
+    foo = {{ FOO }}
+    bar = "{{ BAR }}"
 
-the following will be written to stdout:
+If you run
 
-    # file1.py
-    my_first_string = 'abc'
-    my_second_string = 'def'
+    FOO=123 BAR=abc envtpl < whatever.conf.tpl > whatever.conf
 
-Here, BAR=def was made default, by putting "def" after the pipe symbol (|). If you define BAR at the command line
+you'll get back the original whatever.conf.
 
-    FOO=abc BAR=123 ./envtpl.py < file1.py.tpl
+You can also specify default values
 
-you get
+    foo = {{ FOO | default(123) }}
+    bar = "{{ BAR | default("abc") }}"
 
-    # file1.py
-    my_first_string = 'abc'
-    my_second_string = '123'
+Running
 
-You can also give envtpl a filename
+    FOO=456 envtpl < whatever.conf.tpl > whatever.conf
 
-    $ ls
-    file1.py.tpl
+will generate
 
-    $ envtpl -f file1.py.tpl
-    $ ls
-    file1.py
+    foo = 456
+    bar = "abc"
 
-The input file will be parsed and stripped of the .tpl extension. You can keep the original template by passing in the --keep-template flag
+This is all standard [Jinja2 syntax](http://jinja.pocoo.org/docs/templates/), so you can do things like
 
-    envtpl -f file1.py.tpl --keep-template
+    {% if BAZ is defined %}
+    foo = 123
+    {% else %}
+    foo = 456
+    {% endif %}
+    bar = "abc"
 
-You can also explicitly specify the output file
+If an environment variable is missing, envtpl will throw an error
 
-    envtpl -f file1.py.tpl --output-file file2.py
+    $ echo '{{ FOO }} {{ BAR }}' | FOO=123 envtpl
+    Error: 'BAR' is undefined
 
-If an environment variable is missing, the default behaviour is for envtpl to die with exit code 1. You can change that behaviour to insert empty strings instead by passing the --allow-missing flag
+You can change this behaviour to insert empty strings instead by passing the `--allow-missing` flag.
 
-    envtpl --allow-missing < file_with_missing_vars.py.tpl
+Instead of reading from stdin and writing to stdout, envtpl can take `--input-file` (`-f`) and `--output-file` (`-o`) arguments.
+
+    envtpl -f whatever.conf.tpl -o whatever.conf
+
+As a convenience, if you don't specify an output filename and the input filename ends with `.tpl`, the output filename will be the input filename without the `.tpl` extension, i.e.
+
+    envtpl -f whatever.conf.tpl
+    # is equivalent to
+    envtpl -f whatever.conf.tpl -o whatever.conf
+
+By default, envtpl will **delete** the input template file. You can keep it by passing the `--keep-template` flag.
 
 What's the point?
 -----------------
 
-I use this script a lot in Docker images, typically in a file called start.sh. A redis startup script could look something like this:
+I use this script quite a lot in Docker images. Usually I'll have the CMD execute some file, like /bin/start.sh that sets up the runtime configuration for the container by building configurations from environment variables. A redis example could look like this
 
     #!/bin/bash
     # start.sh
@@ -70,4 +81,4 @@ I use this script a lot in Docker images, typically in a file called start.sh. A
 
     redis-server
 
-To me, that's a bit cleaner than http://blog.james-carr.org/2013/09/04/parameterized-docker-containers/
+This is the use case I've optimised for, so that's why envtpl by default will delete the original template file.
