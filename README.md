@@ -1,7 +1,7 @@
 envtpl
 ======
 
-_Render jinja2 templates on the command line using shell environment variables_
+_Render jinja2 templates on the command line with shell environment variables_
 
 Installation
 ------------
@@ -57,15 +57,16 @@ If an environment variable is missing, envtpl will throw an error
 
 You can change this behaviour to insert empty strings instead by passing the `--allow-missing` flag.
 
-Instead of reading from stdin and writing to stdout, envtpl can take `--input-file` (`-f`) and `--output-file` (`-o`) arguments.
+Instead of reading from stdin and writing to stdout, you can pass the input filename as an optional positional argument,
+and set the output filename with the `--output-file` (`-o`) argument.
 
-    envtpl -f whatever.conf.tpl -o whatever.conf
+    envtpl -o whatever.conf  whatever.conf.tpl
 
 As a convenience, if you don't specify an output filename and the input filename ends with `.tpl`, the output filename will be the input filename without the `.tpl` extension, i.e.
 
-    envtpl -f whatever.conf.tpl
+    envtpl whatever.conf.tpl
     # is equivalent to
-    envtpl -f whatever.conf.tpl -o whatever.conf
+    envtpl -o whatever.conf whatever.conf.tpl
 
 By default, envtpl will **delete** the input template file. You can keep it by passing the `--keep-template` flag.
 
@@ -77,7 +78,7 @@ I use this script quite a lot in Docker images. Usually I'll have the CMD execut
     #!/bin/bash
     # start.sh
 
-    envtpl -f /etc/redis.conf.tpl
+    envtpl /etc/redis.conf.tpl
 
     redis-server
 

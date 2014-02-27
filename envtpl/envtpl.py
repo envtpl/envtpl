@@ -1,5 +1,5 @@
 '''
-envtpl - jinja2 template rendering using shell environment variables
+envtpl - jinja2 template rendering with shell environment variables
 Copyright (C) 2014  Andreas Jansson
 
 This program is free software: you can redistribute it and/or modify
@@ -27,11 +27,10 @@ REGEX = re.compile(r'\{\{ *(?P<name>[^| ]+)(?: *\| *(?P<default>[^ \}]*))? *\}\}
 
 def main():
     parser = argparse.ArgumentParser(
-        'Replace strings in the format "{{ VARIABLE }}" or "{{ VARIABLE|DEFAULT }}" '
-        'with their corresponding environment variables.'
+        description='jinja2 template rendering with shell environment variables'
     )
-    parser.add_argument('-f', '--input-file', 
-                        help='Input filename. Defaults to stdin.'
+    parser.add_argument('input_file', 
+                        nargs='?', help='Input filename. Defaults to stdin.'
     )
     parser.add_argument('-o', '--output-file', 
                         help='Output filename. If none is given, and the input file ends '
