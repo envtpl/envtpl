@@ -21,10 +21,12 @@ class TestRender(unittest.TestCase):
     def test_quoted(self):
         source = '''
 foo = {{ FOO | default(123) }}
-bar = "{{ BAR | default("abc") }}"'''
+bar = "{{ BAR | default("abc") }}"
+'''
         expected = '''
 foo = 456
-bar = "abc"'''
+bar = "abc"
+'''
         self.assertEquals(envtpl.render(source, {'FOO': 456}, True), expected)
 
     def test_if_block(self):
