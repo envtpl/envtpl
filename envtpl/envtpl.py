@@ -103,6 +103,10 @@ def render(source, variables, die_on_missing_variable):
     except jinja2.UndefinedError, e:
         raise Fatal(e)
 
+    # jinja2 cuts the last newline
+    if source.split('\n')[-1] == '' and source != '':
+        output += '\n'
+
     return output
 
 @jinja2.contextfunction
