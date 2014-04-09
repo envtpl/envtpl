@@ -104,7 +104,7 @@ def render(source, variables, die_on_missing_variable):
         raise Fatal(e)
 
     # jinja2 cuts the last newline
-    if source.split('\n')[-1] == '' and source != '':
+    if source.split('\n')[-1] == '' and output.split('\n')[-1] != '':
         output += '\n'
 
     return output
