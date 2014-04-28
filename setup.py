@@ -90,7 +90,7 @@ This is the use case I've optimised for, so that's why envtpl by default will de
 
 setup(
     name='envtpl',
-    version='0.2.2',
+    version='0.2.3',
     packages=['envtpl'],
     entry_points={
         'console_scripts': ['envtpl = envtpl.envtpl:main']
@@ -98,9 +98,7 @@ setup(
     install_requires=[
         'argparse>=1.0',
         'Jinja2>=2.7',
-        'unittest2',
     ],
-    test_suite='tests',
     author='Andreas Jansson',
     author_email='andreas@jansson.me.uk',
     description=('Render jinja2 templates on the command line using shell environment variables'),
