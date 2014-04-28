@@ -95,16 +95,25 @@ def render(source, variables, die_on_missing_variable):
         template = jinja2.Template(source, undefined=undefined)
     except jinja2.TemplateSyntaxError, e:
         raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
+
+    template.globals['environment'] = get_environment
+
     try:
         output = template.render(**variables)
     except jinja2.UndefinedError, e:
         raise Fatal(e)
 
     # jinja2 cuts the last newline
-    if source.split('\n')[-1] == '' and source != '':
+    if source.split('\n')[-1] == '' and output.split('\n')[-1] != '':
         output += '\n'
 
     return output
+
+@jinja2.contextfunction
+def get_environment(context, prefix=''):
+    for key, value in sorted(context.items()):
+        if not callable(value) and key.startswith(prefix):
+            yield key[len(prefix):], value
 
 class Fatal(Exception):
     pass

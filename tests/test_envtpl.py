@@ -43,7 +43,27 @@ foo = 456
 
 bar = "abc"'''
         self.assertEquals(envtpl.render(source, {}, True), expected)
-        
+
+    def test_environment(self):
+        source = '''
+{% for key, value in environment() %}{{ key }} = {{ value }}
+{% endfor %}
+'''
+        expected = '''
+baz = qux
+foo = bar
+'''
+        self.assertEquals(envtpl.render(source, {'foo': 'bar', 'baz': 'qux'}, True), expected)
+
+    def test_environment_prefix(self):
+        source = '''
+{% for key, value in environment('X_') %}{{ key }} = {{ value }}
+{% endfor %}
+'''
+        expected = '''
+foo = bar
+'''
+        self.assertEquals(envtpl.render(source, {'X_foo': 'bar', 'baz': 'X_qux'}, True), expected)
 
 class TestFiles(unittest.TestCase):
 

@@ -73,13 +73,29 @@ As a convenience, if you don't specify an output filename and the input filename
 
 By default, envtpl will **delete** the input template file. You can keep it by passing the `--keep-template` flag.
 
+There's a special `environment(prefix='')` function that you can use as a kind of wildcard variable. If you have `hello.tpl`
+
+    hello = {{ FOO }}
+    {% for key, value in environment('MY_') %}{{ key }} = {{ value }}
+    {% endfor %}
+
+and compile it using
+
+    FOO=world MY_baz=qux MY_foo=bar envtpl hello.tpl
+
+You end up with
+
+    hello = world
+    baz = qux
+    foo = bar
+
 What's the point?
 -----------------
 
-I use this script quite a lot in Docker images. Usually I'll have the CMD execute some file, like /bin/start.sh, that sets up the runtime configuration for the container by inserting environment variables into config files before starting the main process. A redis example could look like this
+I use this script quite a lot in Docker images. Usually I'll have the CMD execute some file, like /bin/start_container, that sets up the runtime configuration for the container by inserting environment variables into config files before starting the main process. A redis example could look like this
 
     #!/bin/bash
-    # start.sh
+    # start_container
 
     envtpl /etc/redis.conf.tpl
 
@@ -90,7 +106,7 @@ This is the use case I've optimised for, so that's why envtpl by default will de
 
 setup(
     name='envtpl',
-    version='0.2.3',
+    version='0.3.2',
     packages=['envtpl'],
     entry_points={
         'console_scripts': ['envtpl = envtpl.envtpl:main']
