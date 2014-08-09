@@ -23,7 +23,6 @@ import argparse
 import jinja2
 
 EXTENSION = '.tpl'
-REGEX = re.compile(r'\{\{ *(?P<name>[^| ]+)(?: *\| *(?P<default>[^ \}]*))? *\}\}')
 
 def main():
     parser = argparse.ArgumentParser(
