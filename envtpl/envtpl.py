@@ -51,7 +51,7 @@ def main():
     variables = os.environ
     try:
         process_file(args.input_file, args.output_file, variables, not args.allow_missing, not args.keep_template)
-    except (Fatal, IOError), e:
+    except (Fatal, IOError) as e:
         sys.stderr.write('Error: %s\n' % str(e))
         sys.exit(1)
 
@@ -93,14 +93,14 @@ def render(source, variables, die_on_missing_variable):
 
     try:
         template = jinja2.Template(source, undefined=undefined)
-    except jinja2.TemplateSyntaxError, e:
+    except jinja2.TemplateSyntaxError as e:
         raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
 
     template.globals['environment'] = get_environment
 
     try:
         output = template.render(**variables)
-    except jinja2.UndefinedError, e:
+    except jinja2.UndefinedError as e:
         raise Fatal(e)
 
     # jinja2 cuts the last newline
