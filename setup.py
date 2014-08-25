@@ -109,7 +109,7 @@ setup(
     version='0.3.2',
     py_modules=['envtpl'],
     entry_points={
-        'console_scripts': ['envtpl = envtpl.envtpl:main']
+        'console_scripts': ['envtpl = envtpl:main']
     },
     install_requires=[
         'argparse>=1.0',
