@@ -114,6 +114,7 @@ setup(
     install_requires=[
         'argparse>=1.0',
         'Jinja2>=2.7',
+        'six',
     ],
     author='Andreas Jansson',
     author_email='andreas@jansson.me.uk',

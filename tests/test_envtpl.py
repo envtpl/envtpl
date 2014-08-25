@@ -1,4 +1,8 @@
-import unittest2 as unittest
+import six
+if six.PY3:
+    import unittest
+else:
+    import unittest2 as unittest
 
 import os
 import envtpl
