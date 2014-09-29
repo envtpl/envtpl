@@ -67,13 +67,36 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
         if not output_filename:
             raise Fatal('Output filename is empty')
 
+    if die_on_missing_variable:
+        undefined = jinja2.StrictUndefined
+    else:
+        undefined = jinja2.Undefined
+
     if input_filename:
         with open(input_filename, 'r') as f:
             source = f.read()
+
+        loader = jinja2.FileSystemLoader(os.path.dirname(input_filename))
+        env = jinja2.Environment(loader=loader, undefined=undefined)
+
+        relpath = os.path.relpath(input_filename, os.path.dirname(input_filename))
+        try:
+            template = env.get_template(relpath)
+        except jinja2.TemplateSyntaxError as e:
+            raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
     else:
         source = sys.stdin.read()
 
-    output = render(source, variables, die_on_missing_variable)
+        try:
+            template = jinja2.Template(source, undefined=undefined)
+        except jinja2.TemplateSyntaxError as e:
+            raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
+
+    output = render(template, variables)
+
+    # jinja2 cuts the last newline
+    if source.split('\n')[-1] == '' and output.split('\n')[-1] != '':
+        output += '\n'
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
@@ -84,27 +107,13 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if input_filename and remove_template:
         os.unlink(input_filename)
 
-def render(source, variables, die_on_missing_variable):
-    if die_on_missing_variable:
-        undefined = jinja2.StrictUndefined
-    else:
-        undefined = jinja2.Undefined
-
-    try:
-        template = jinja2.Template(source, undefined=undefined)
-    except jinja2.TemplateSyntaxError as e:
-        raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
-
+def render(template, variables):
     template.globals['environment'] = get_environment
 
     try:
         output = template.render(**variables)
     except jinja2.UndefinedError as e:
         raise Fatal(e)
-
-    # jinja2 cuts the last newline
-    if source.split('\n')[-1] == '' and output.split('\n')[-1] != '':
-        output += '\n'
 
     return output
 
