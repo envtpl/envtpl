@@ -5,22 +5,23 @@ else:
     import unittest2 as unittest
 
 import os
+import jinja2
 import envtpl
 
 class TestRender(unittest.TestCase):
 
     def test_empty(self):
-        self.assertEquals(envtpl.render('', {}, True), '')
+        self.assertEquals(envtpl._render('', None, {}, jinja2.StrictUndefined), '')
 
     def test_die_on_missing(self):
-        self.assertRaises(envtpl.Fatal, envtpl.render, '{{ FOO }}', {}, True)
+        self.assertRaises(envtpl.Fatal, envtpl._render, '{{ FOO }}', None, {}, jinja2.StrictUndefined)
 
     def test_dont_die_on_missing(self):
-        self.assertEquals(envtpl.render('{{ FOO }}', {}, False), '')
+        self.assertEquals(envtpl._render('{{ FOO }}', None, {}, jinja2.Undefined), '')
 
     def test_defaults(self):
-        self.assertEquals(envtpl.render('{{ FOO | default("abc") }}', {}, True), 'abc')
-        self.assertEquals(envtpl.render('{{ FOO | default("abc") }}', {'FOO': 'def'}, True), 'def')
+        self.assertEquals(envtpl._render('{{ FOO | default("abc") }}', None, {}, jinja2.StrictUndefined), 'abc')
+        self.assertEquals(envtpl._render('{{ FOO | default("abc") }}', None, {'FOO': 'def'}, jinja2.StrictUndefined), 'def')
 
     def test_quoted(self):
         source = '''
@@ -31,7 +32,7 @@ bar = "{{ BAR | default("abc") }}"
 foo = 456
 bar = "abc"
 '''
-        self.assertEquals(envtpl.render(source, {'FOO': 456}, True), expected)
+        self.assertEquals(envtpl._render(source, None, {'FOO': 456}, jinja2.StrictUndefined), expected)
 
     def test_if_block(self):
         source = '''
@@ -46,7 +47,7 @@ bar = "abc"'''
 foo = 456
 
 bar = "abc"'''
-        self.assertEquals(envtpl.render(source, {}, True), expected)
+        self.assertEquals(envtpl._render(source, None, {}, jinja2.StrictUndefined), expected)
 
     def test_environment(self):
         source = '''
@@ -57,7 +58,7 @@ bar = "abc"'''
 baz = qux
 foo = bar
 '''
-        self.assertEquals(envtpl.render(source, {'foo': 'bar', 'baz': 'qux'}, True), expected)
+        self.assertEquals(envtpl._render(source, None, {'foo': 'bar', 'baz': 'qux'}, jinja2.StrictUndefined), expected)
 
     def test_environment_prefix(self):
         source = '''
@@ -67,7 +68,7 @@ foo = bar
         expected = '''
 foo = bar
 '''
-        self.assertEquals(envtpl.render(source, {'X_foo': 'bar', 'baz': 'X_qux'}, True), expected)
+        self.assertEquals(envtpl._render(source, None, {'X_foo': 'bar', 'baz': 'X_qux'}, jinja2.StrictUndefined), expected)
 
 class TestFiles(unittest.TestCase):
 
@@ -83,8 +84,8 @@ class TestFiles(unittest.TestCase):
         os.rmdir(self.scratch_dir)
 
     def test_bad_missing_output_filename(self):
-        self.assertRaises(envtpl.Fatal, envtpl.process_file, 'foo.bar', None, {}, False, True)
-        self.assertRaises(envtpl.Fatal, envtpl.process_file, '.tpl', None, {}, False, True)
+        self.assertRaises(envtpl.Fatal, envtpl.process_file, 'foo.bar', None, {}, jinja2.Undefined, True)
+        self.assertRaises(envtpl.Fatal, envtpl.process_file, '.tpl', None, {}, jinja2.Undefined, True)
 
     def test_delete(self):
         filename = os.path.join(self.scratch_dir, 'file1')
@@ -118,6 +119,28 @@ frogs will be frogs
             )
 
         expected = '''abc --- 123
+frogs will be frogs
++++'''
+        envtpl.process_file(tpl_filename, None, {'FOO': '---', 'BAR': '+++'}, False, True)
+        with open(filename, 'r') as f:
+            self.assertEquals(f.read(), expected)
+
+    def test_include(self):
+        filename = os.path.join(self.scratch_dir, 'file1')
+        incl_filename = filename + "-incl.tpl"
+        tpl_filename = filename + '.tpl'
+
+        with open(incl_filename, 'w') as f:
+            f.write('''{{ INCLUDE|default('incl') }}''')
+
+        with open(tpl_filename, 'w') as f:
+            f.write(
+'''abc {{ FOO }} 123 {% include 'file1-incl.tpl' %}
+frogs will be frogs
+{{    BAR|default("456")}}'''
+            )
+
+        expected = '''abc --- 123 incl
 frogs will be frogs
 +++'''
         envtpl.process_file(tpl_filename, None, {'FOO': '---', 'BAR': '+++'}, False, True)
