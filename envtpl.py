@@ -60,6 +60,11 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if not input_filename and not remove_template:
         raise Fatal('--keep-template only makes sense if you specify an input file')
 
+    if die_on_missing_variable:
+        undefined = jinja2.StrictUndefined
+    else:
+        undefined = jinja2.Undefined
+
     if input_filename and not output_filename:
         if not input_filename.endswith(EXTENSION):
             raise Fatal('If no output filename is given, input filename must end in %s' % EXTENSION)
@@ -67,19 +72,14 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
         if not output_filename:
             raise Fatal('Output filename is empty')
 
-    if die_on_missing_variable:
-        undefined = jinja2.StrictUndefined
-    else:
-        undefined = jinja2.Undefined
-
     if input_filename:
         with open(input_filename, 'r') as f:
             source = f.read()
 
         loader = jinja2.FileSystemLoader(os.path.dirname(input_filename))
         env = jinja2.Environment(loader=loader, undefined=undefined)
-
         relpath = os.path.relpath(input_filename, os.path.dirname(input_filename))
+
         try:
             template = env.get_template(relpath)
         except jinja2.TemplateSyntaxError as e:
@@ -87,16 +87,7 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     else:
         source = sys.stdin.read()
 
-        try:
-            template = jinja2.Template(source, undefined=undefined)
-        except jinja2.TemplateSyntaxError as e:
-            raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
-
-    output = render(template, variables)
-
-    # jinja2 cuts the last newline
-    if source.split('\n')[-1] == '' and output.split('\n')[-1] != '':
-        output += '\n'
+    output = render(source, template, variables, undefined)
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
@@ -107,13 +98,23 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if input_filename and remove_template:
         os.unlink(input_filename)
 
-def render(template, variables):
+def render(source, template, variables, undefined):
+    if template is None:
+        try:
+            template = jinja2.Template(source, undefined=undefined)
+        except jinja2.TemplateSyntaxError as e:
+            raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
+
     template.globals['environment'] = get_environment
 
     try:
         output = template.render(**variables)
     except jinja2.UndefinedError as e:
         raise Fatal(e)
+
+    # jinja2 cuts the last newline
+    if source.split('\n')[-1] == '' and output.split('\n')[-1] != '':
+        output += '\n'
 
     return output
 
