@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import sys
-import re
 import argparse
 import jinja2
 
@@ -87,7 +86,7 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     else:
         source = sys.stdin.read()
 
-    output = render(source, template, variables, undefined)
+    output = _render(source, template, variables, undefined)
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
@@ -98,7 +97,7 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if input_filename and remove_template:
         os.unlink(input_filename)
 
-def render(source, template, variables, undefined):
+def _render(source, template, variables, undefined):
     if template is None:
         try:
             template = jinja2.Template(source, undefined=undefined)

@@ -11,17 +11,17 @@ import envtpl
 class TestRender(unittest.TestCase):
 
     def test_empty(self):
-        self.assertEquals(envtpl.render('', None, {}, jinja2.StrictUndefined), '')
+        self.assertEquals(envtpl._render('', None, {}, jinja2.StrictUndefined), '')
 
     def test_die_on_missing(self):
-        self.assertRaises(envtpl.Fatal, envtpl.render, '{{ FOO }}', None, {}, jinja2.StrictUndefined)
+        self.assertRaises(envtpl.Fatal, envtpl._render, '{{ FOO }}', None, {}, jinja2.StrictUndefined)
 
     def test_dont_die_on_missing(self):
-        self.assertEquals(envtpl.render('{{ FOO }}', None, {}, jinja2.Undefined), '')
+        self.assertEquals(envtpl._render('{{ FOO }}', None, {}, jinja2.Undefined), '')
 
     def test_defaults(self):
-        self.assertEquals(envtpl.render('{{ FOO | default("abc") }}', None, {}, jinja2.StrictUndefined), 'abc')
-        self.assertEquals(envtpl.render('{{ FOO | default("abc") }}', None, {'FOO': 'def'}, jinja2.StrictUndefined), 'def')
+        self.assertEquals(envtpl._render('{{ FOO | default("abc") }}', None, {}, jinja2.StrictUndefined), 'abc')
+        self.assertEquals(envtpl._render('{{ FOO | default("abc") }}', None, {'FOO': 'def'}, jinja2.StrictUndefined), 'def')
 
     def test_quoted(self):
         source = '''
@@ -32,7 +32,7 @@ bar = "{{ BAR | default("abc") }}"
 foo = 456
 bar = "abc"
 '''
-        self.assertEquals(envtpl.render(source, None, {'FOO': 456}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render(source, None, {'FOO': 456}, jinja2.StrictUndefined), expected)
 
     def test_if_block(self):
         source = '''
@@ -47,7 +47,7 @@ bar = "abc"'''
 foo = 456
 
 bar = "abc"'''
-        self.assertEquals(envtpl.render(source, None, {}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render(source, None, {}, jinja2.StrictUndefined), expected)
 
     def test_environment(self):
         source = '''
@@ -58,7 +58,7 @@ bar = "abc"'''
 baz = qux
 foo = bar
 '''
-        self.assertEquals(envtpl.render(source, None, {'foo': 'bar', 'baz': 'qux'}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render(source, None, {'foo': 'bar', 'baz': 'qux'}, jinja2.StrictUndefined), expected)
 
     def test_environment_prefix(self):
         source = '''
@@ -68,7 +68,7 @@ foo = bar
         expected = '''
 foo = bar
 '''
-        self.assertEquals(envtpl.render(source, None, {'X_foo': 'bar', 'baz': 'X_qux'}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render(source, None, {'X_foo': 'bar', 'baz': 'X_qux'}, jinja2.StrictUndefined), expected)
 
 class TestFiles(unittest.TestCase):
 
