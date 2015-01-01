@@ -71,6 +71,7 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
         if not output_filename:
             raise Fatal('Output filename is empty')
 
+    template = None
     if input_filename:
         with open(input_filename, 'r') as f:
             source = f.read()
