@@ -106,7 +106,7 @@ This is the use case I've optimised for, so that's why envtpl by default will de
 
 setup(
     name='envtpl',
-    version='0.4.0',
+    version='0.4.1',
     py_modules=['envtpl'],
     entry_points={
         'console_scripts': ['envtpl = envtpl:main']
