@@ -70,6 +70,24 @@ foo = bar
 '''
         self.assertEquals(envtpl._render(source, None, {'X_foo': 'bar', 'baz': 'X_qux'}, jinja2.StrictUndefined), expected)
 
+    def test_env(self):
+        source = '''
+{{ env('FOO') }}
+{{ env('MY_' + FOO) }}
+'''
+        expected = '''
+bar
+baz
+'''
+
+        self.assertEquals(envtpl._render(source, None, {'FOO': 'bar', 'MY_bar': 'baz'}, jinja2.StrictUndefined), expected)
+
+    def test_die_on_env_missing(self):
+        self.assertRaises(envtpl.Fatal, envtpl._render, '{{ env("FOO") }}', None, {}, jinja2.StrictUndefined)
+
+    def test_dont_die_on_env_missing(self):
+        self.assertEquals(envtpl._render('{{ env("FOO") }}', None, {}, jinja2.Undefined), '')
+
 class TestFiles(unittest.TestCase):
 
     def setUp(self):

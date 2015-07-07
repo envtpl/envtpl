@@ -88,6 +88,19 @@ You end up with
     baz = qux
     foo = bar
 
+Also there's a special `env(name)` function that is used to get the value using the dynamic variable name. If you have `hello.tpl`
+
+    hello = {{ env('MY_' + FOO) }}
+
+and compile it using
+    
+    FOO=bar
+    MY_bar=baz
+
+You end up with
+
+    hello = baz
+
 What's the point?
 -----------------
 
