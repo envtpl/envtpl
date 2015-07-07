@@ -27,10 +27,10 @@ def main():
     parser = argparse.ArgumentParser(
         description='jinja2 template rendering with shell environment variables'
     )
-    parser.add_argument('input_file', 
+    parser.add_argument('input_file',
                         nargs='?', help='Input filename. Defaults to stdin.'
     )
-    parser.add_argument('-o', '--output-file', 
+    parser.add_argument('-o', '--output-file',
                         help='Output filename. If none is given, and the input file ends '
                         'with "%s", the output filename is the same as the input '
                         'filename, sans the %s extension. Otherwise, defaults to stdout.' %
@@ -106,6 +106,7 @@ def _render(source, template, variables, undefined):
             raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
 
     template.globals['environment'] = get_environment
+    template.globals['env'] = get_env_wrapper(undefined)
 
     try:
         output = template.render(**variables)
@@ -123,6 +124,20 @@ def get_environment(context, prefix=''):
     for key, value in sorted(context.items()):
         if not callable(value) and key.startswith(prefix):
             yield key[len(prefix):], value
+
+def get_env_wrapper(undefined):
+    @jinja2.contextfunction
+    def get_env(context, name):
+        for key, value in sorted(context.items()):
+            if not callable(value) and key == name:
+                return value
+
+        if undefined == jinja2.StrictUndefined:
+            raise jinja2.exceptions.UndefinedError("'{}' is undefined".format(name))
+
+        return ''
+
+    return get_env
 
 class Fatal(Exception):
     pass
