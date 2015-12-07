@@ -11,20 +11,20 @@ import envtpl
 class TestRender(unittest.TestCase):
 
     def test_empty(self):
-        self.assertEquals(envtpl._render('', None, {}, jinja2.StrictUndefined), '')
+        self.assertEquals(envtpl._render_string('', {}, jinja2.StrictUndefined), '')
 
     def test_die_on_missing(self):
-        self.assertRaises(envtpl.Fatal, envtpl._render, '{{ FOO }}', None, {}, jinja2.StrictUndefined)
+        self.assertRaises(envtpl.Fatal, envtpl._render_string, '{{ FOO }}', {}, jinja2.StrictUndefined)
 
     def test_dont_die_on_missing(self):
-        self.assertEquals(envtpl._render('{{ FOO }}', None, {}, jinja2.Undefined), '')
+        self.assertEquals(envtpl._render_string('{{ FOO }}', {}, jinja2.Undefined), '')
 
     def test_defaults(self):
-        self.assertEquals(envtpl._render('{{ FOO | default("abc") }}', None, {}, jinja2.StrictUndefined), 'abc')
-        self.assertEquals(envtpl._render('{{ FOO | default("abc") }}', None, {'FOO': 'def'}, jinja2.StrictUndefined), 'def')
+        self.assertEquals(envtpl._render_string('{{ FOO | default("abc") }}', {}, jinja2.StrictUndefined), 'abc')
+        self.assertEquals(envtpl._render_string('{{ FOO | default("abc") }}', {'FOO': 'def'}, jinja2.StrictUndefined), 'def')
 
     def test_quoted(self):
-        source = '''
+        string = '''
 foo = {{ FOO | default(123) }}
 bar = "{{ BAR | default("abc") }}"
 '''
@@ -32,10 +32,10 @@ bar = "{{ BAR | default("abc") }}"
 foo = 456
 bar = "abc"
 '''
-        self.assertEquals(envtpl._render(source, None, {'FOO': 456}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render_string(string, {'FOO': 456}, jinja2.StrictUndefined), expected)
 
     def test_if_block(self):
-        source = '''
+        string = '''
 {% if BAZ is defined %}
 foo = 123
 {% else %}
@@ -47,10 +47,10 @@ bar = "abc"'''
 foo = 456
 
 bar = "abc"'''
-        self.assertEquals(envtpl._render(source, None, {}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render_string(string, {}, jinja2.StrictUndefined), expected)
 
     def test_environment(self):
-        source = '''
+        string = '''
 {% for key, value in environment() %}{{ key }} = {{ value }}
 {% endfor %}
 '''
@@ -58,17 +58,40 @@ bar = "abc"'''
 baz = qux
 foo = bar
 '''
-        self.assertEquals(envtpl._render(source, None, {'foo': 'bar', 'baz': 'qux'}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render_string(string, {'foo': 'bar', 'baz': 'qux'}, jinja2.StrictUndefined), expected)
 
     def test_environment_prefix(self):
-        source = '''
+        string = '''
 {% for key, value in environment('X_') %}{{ key }} = {{ value }}
 {% endfor %}
 '''
         expected = '''
 foo = bar
 '''
-        self.assertEquals(envtpl._render(source, None, {'X_foo': 'bar', 'baz': 'X_qux'}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render_string(string, {'X_foo': 'bar', 'baz': 'X_qux'}, jinja2.StrictUndefined), expected)
+
+    def test_from_json_list(self):
+        string = '''
+{% for foo in FOOS_JSON | from_json %}{{ foo.bar }}
+{% endfor %}
+'''
+        expected = '''
+hello
+world
+'''
+        foos_json = '[{"bar": "hello"}, {"bar": "world"}]'
+        self.assertEquals(envtpl._render_string(string, {'FOOS_JSON': foos_json},
+                                                jinja2.StrictUndefined), expected)
+
+    def test_from_json_object(self):
+        string = '''
+{{ (FOO | from_json).bar }}
+'''
+        expected = '''
+baz
+'''
+        self.assertEquals(envtpl._render_string(string, {'FOO': '{"bar": "baz"}'},
+                                                jinja2.StrictUndefined), expected)
 
 class TestFiles(unittest.TestCase):
 

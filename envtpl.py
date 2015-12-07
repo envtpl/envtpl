@@ -20,6 +20,8 @@ import os
 import sys
 import argparse
 import jinja2
+import json
+import collections
 
 EXTENSION = '.tpl'
 
@@ -71,23 +73,10 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
         if not output_filename:
             raise Fatal('Output filename is empty')
 
-    template = None
     if input_filename:
-        with open(input_filename, 'r') as f:
-            source = f.read()
-
-        loader = jinja2.FileSystemLoader(os.path.dirname(input_filename))
-        env = jinja2.Environment(loader=loader, undefined=undefined)
-        relpath = os.path.relpath(input_filename, os.path.dirname(input_filename))
-
-        try:
-            template = env.get_template(relpath)
-        except jinja2.TemplateSyntaxError as e:
-            raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
+        output = _render_file(input_filename, variables, undefined)
     else:
-        source = sys.stdin.read()
-
-    output = _render(source, template, variables, undefined)
+        output = _render_string(sys.stdin.read(), variables, undefined)
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
@@ -98,13 +87,22 @@ def process_file(input_filename, output_filename, variables, die_on_missing_vari
     if input_filename and remove_template:
         os.unlink(input_filename)
 
-def _render(source, template, variables, undefined):
-    if template is None:
-        try:
-            template = jinja2.Template(source, undefined=undefined)
-        except jinja2.TemplateSyntaxError as e:
-            raise Fatal('Syntax error on line %d: %s' % (e.lineno, e.message))
+def _render_string(string, variables, undefined):
+    template_name = 'template_name'
+    loader = jinja2.DictLoader({template_name: string})
+    return _render(template_name, loader, variables, undefined)
 
+def _render_file(filename, variables, undefined):
+    dirname = os.path.dirname(filename)
+    loader = jinja2.FileSystemLoader(dirname)
+    relpath = os.path.relpath(filename, dirname)
+    return _render(relpath, loader, variables, undefined)
+
+def _render(template_name, loader, variables, undefined):
+    env = jinja2.Environment(loader=loader, undefined=undefined)
+    env.filters['from_json'] = from_json
+
+    template = env.get_template(template_name)
     template.globals['environment'] = get_environment
 
     try:
@@ -113,6 +111,7 @@ def _render(source, template, variables, undefined):
         raise Fatal(e)
 
     # jinja2 cuts the last newline
+    source, _, _ = loader.get_source(env, template_name)
     if source.split('\n')[-1] == '' and output.split('\n')[-1] != '':
         output += '\n'
 
@@ -123,6 +122,10 @@ def get_environment(context, prefix=''):
     for key, value in sorted(context.items()):
         if not callable(value) and key.startswith(prefix):
             yield key[len(prefix):], value
+
+@jinja2.evalcontextfilter
+def from_json(eval_ctx, value):
+    return json.loads(value)
 
 class Fatal(Exception):
     pass

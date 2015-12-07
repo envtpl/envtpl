@@ -88,6 +88,22 @@ You end up with
     baz = qux
     foo = bar
 
+If you need more complex data structures you can pass in JSON as a string and use the `from_json` filter to turn it into an object you can use in your template:
+
+    FOO='[{"v": "hello"}, {"v": "world"}]' envtpl <<< '{% for x in FOO | from_json %}{{ x.v }}{% endfor %}'
+
+gives
+
+    helloworld
+
+and
+
+    FOO='{"bar": "baz"}' envtpl <<< '{{ (FOO | from_json).bar }}'
+
+renders
+
+    baz
+
 What's the point?
 -----------------
 
