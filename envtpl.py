@@ -21,7 +21,6 @@ import sys
 import argparse
 import jinja2
 import json
-import collections
 
 EXTENSION = '.tpl'
 
