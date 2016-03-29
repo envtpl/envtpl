@@ -1,12 +1,12 @@
 import six
+import os
+import jinja2
+import envtpl
 if six.PY3:
     import unittest
 else:
     import unittest2 as unittest
 
-import os
-import jinja2
-import envtpl
 
 class TestRender(unittest.TestCase):
 
@@ -14,14 +14,17 @@ class TestRender(unittest.TestCase):
         self.assertEquals(envtpl._render_string('', {}, jinja2.StrictUndefined), '')
 
     def test_die_on_missing(self):
-        self.assertRaises(envtpl.Fatal, envtpl._render_string, '{{ FOO }}', {}, jinja2.StrictUndefined)
+        self.assertRaises(envtpl.Fatal, envtpl._render_string, '{{ FOO }}', {},
+                          jinja2.StrictUndefined)
 
     def test_dont_die_on_missing(self):
         self.assertEquals(envtpl._render_string('{{ FOO }}', {}, jinja2.Undefined), '')
 
     def test_defaults(self):
-        self.assertEquals(envtpl._render_string('{{ FOO | default("abc") }}', {}, jinja2.StrictUndefined), 'abc')
-        self.assertEquals(envtpl._render_string('{{ FOO | default("abc") }}', {'FOO': 'def'}, jinja2.StrictUndefined), 'def')
+        self.assertEquals(envtpl._render_string('{{ FOO | default("abc") }}', {},
+                          jinja2.StrictUndefined), 'abc')
+        self.assertEquals(envtpl._render_string('{{ FOO | default("abc") }}', {'FOO': 'def'},
+                          jinja2.StrictUndefined), 'def')
 
     def test_quoted(self):
         string = '''
@@ -32,7 +35,8 @@ bar = "{{ BAR | default("abc") }}"
 foo = 456
 bar = "abc"
 '''
-        self.assertEquals(envtpl._render_string(string, {'FOO': 456}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render_string(string, {'FOO': 456},
+                          jinja2.StrictUndefined), expected)
 
     def test_if_block(self):
         string = '''
@@ -58,7 +62,8 @@ bar = "abc"'''
 baz = qux
 foo = bar
 '''
-        self.assertEquals(envtpl._render_string(string, {'foo': 'bar', 'baz': 'qux'}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render_string(string, {'foo': 'bar', 'baz': 'qux'},
+                          jinja2.StrictUndefined), expected)
 
     def test_environment_prefix(self):
         string = '''
@@ -68,7 +73,8 @@ foo = bar
         expected = '''
 foo = bar
 '''
-        self.assertEquals(envtpl._render_string(string, {'X_foo': 'bar', 'baz': 'X_qux'}, jinja2.StrictUndefined), expected)
+        self.assertEquals(envtpl._render_string(string, {'X_foo': 'bar', 'baz': 'X_qux'},
+                          jinja2.StrictUndefined), expected)
 
     def test_from_json_list(self):
         string = '''
@@ -93,6 +99,7 @@ baz
         self.assertEquals(envtpl._render_string(string, {'FOO': '{"bar": "baz"}'},
                                                 jinja2.StrictUndefined), expected)
 
+
 class TestFiles(unittest.TestCase):
 
     def setUp(self):
@@ -107,19 +114,19 @@ class TestFiles(unittest.TestCase):
         os.rmdir(self.scratch_dir)
 
     def test_bad_missing_output_filename(self):
-        self.assertRaises(envtpl.Fatal, envtpl.process_file, 'foo.bar', None, {}, jinja2.Undefined, True)
-        self.assertRaises(envtpl.Fatal, envtpl.process_file, '.tpl', None, {}, jinja2.Undefined, True)
+        self.assertRaises(envtpl.Fatal, envtpl.process_file, 'foo.bar', None, {},
+                          jinja2.Undefined, True)
+        self.assertRaises(envtpl.Fatal, envtpl.process_file, '.tpl', None, {},
+                          jinja2.Undefined, True)
 
     def test_delete(self):
         filename = os.path.join(self.scratch_dir, 'file1')
         tpl_filename = filename + '.tpl'
 
         with open(tpl_filename, 'w') as f:
-            f.write(
-'''abc {{ FOO }} 123
+            f.write('''abc {{ FOO }} 123
 frogs will be frogs
-{{    BAR | default("456")}}'''
-            )
+{{    BAR | default("456")}}''')
 
         expected = '''abc  123
 frogs will be frogs
@@ -135,11 +142,9 @@ frogs will be frogs
         tpl_filename = filename + '.tpl'
 
         with open(tpl_filename, 'w') as f:
-            f.write(
-'''abc {{ FOO }} 123
+            f.write('''abc {{ FOO }} 123
 frogs will be frogs
-{{    BAR|default("456")}}'''
-            )
+{{    BAR|default("456")}}''')
 
         expected = '''abc --- 123
 frogs will be frogs
@@ -157,11 +162,9 @@ frogs will be frogs
             f.write('''{{ INCLUDE|default('incl') }}''')
 
         with open(tpl_filename, 'w') as f:
-            f.write(
-'''abc {{ FOO }} 123 {% include 'file1-incl.tpl' %}
+            f.write('''abc {{ FOO }} 123 {% include 'file1-incl.tpl' %}
 frogs will be frogs
-{{    BAR|default("456")}}'''
-            )
+{{    BAR|default("456")}}''')
 
         expected = '''abc --- 123 incl
 frogs will be frogs

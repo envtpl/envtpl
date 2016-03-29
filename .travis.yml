@@ -6,4 +6,4 @@ python:
 install:
   - "python setup.py install"
   - "pip install -r tests/requirements.txt"
-script: nosetests
+script: make test
