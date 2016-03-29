@@ -102,7 +102,7 @@ I use this script quite a lot in Docker images. Usually I'll have the CMD execut
     redis-server
 
 This is the use case I've optimised for, so that's why envtpl by default will delete the original template file.
-'''
+'''  # noqa
 
 setup(
     name='envtpl',
