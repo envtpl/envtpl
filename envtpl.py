@@ -95,7 +95,7 @@ def process_file(input_filename, output_filename, variables,
 
 
 def _render_string(string, variables, undefined):
-    if isinstance(string, str):
+    if isinstance(string, str) and sys.version_info < (3, 0):
         string = unicode(string, 'utf-8')
 
     template_name = 'template_name'
