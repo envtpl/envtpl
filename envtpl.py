@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 '''
 envtpl - jinja2 template rendering with shell environment variables
 Copyright (C) 2014  Andreas Jansson
@@ -21,6 +23,10 @@ import sys
 import argparse
 import jinja2
 import json
+import codecs
+
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 EXTENSION = '.tpl'
 
@@ -89,6 +95,9 @@ def process_file(input_filename, output_filename, variables,
 
 
 def _render_string(string, variables, undefined):
+    if isinstance(string, str):
+        string = unicode(string, 'utf-8')
+
     template_name = 'template_name'
     loader = jinja2.DictLoader({template_name: string})
     return _render(template_name, loader, variables, undefined)

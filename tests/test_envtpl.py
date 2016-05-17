@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import six
 import os
 import jinja2
@@ -98,6 +100,24 @@ baz
 '''
         self.assertEquals(envtpl._render_string(string, {'FOO': '{"bar": "baz"}'},
                                                 jinja2.StrictUndefined), expected)
+
+    def test_unicode_output(self):
+        string = '''
+åäö
+'''
+        expected = u'''
+åäö
+'''
+        self.assertEquals(envtpl._render_string(string, {}, jinja2.StrictUndefined), expected)
+
+    def test_unicode_input(self):
+        string = u'''
+åäö
+'''
+        expected = u'''
+åäö
+'''
+        self.assertEquals(envtpl._render_string(string, {}, jinja2.StrictUndefined), expected)
 
 
 class TestFiles(unittest.TestCase):
