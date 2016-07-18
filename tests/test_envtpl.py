@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import sh
+import tempfile
 import six
 import os
 import jinja2
@@ -227,3 +229,49 @@ frogs will be frogs
             self.assertEquals(f.read(), 'foo')
 
         self.assertFalse(os.path.exists(tpl_filename))
+
+
+class TestSubprocess(unittest.TestCase):
+
+    def setUp(self):
+        self.cleanup_filenames = []
+        self.tempdir = tempfile.gettempdir()
+
+    def tearDown(self):
+        for filename in self.cleanup_filenames:
+            if os.path.exists(filename):
+                os.unlink(filename)
+
+    def tempfile(self, name):
+        filename = os.path.join(self.tempdir, name)
+        self.cleanup_filenames.append(filename)
+        return filename
+
+    def envtpl(self):
+        path = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(path, '..', 'envtpl.py')
+
+    def test_files(self):
+        tpl_filename = self.tempfile('test.txt.tpl')
+        txt_filename = self.tempfile('test.txt')
+        with open(tpl_filename, 'wt') as f:
+            f.write('hello {{FOO}}')
+
+        sh.python(
+            self.envtpl(), tpl_filename,
+            _env={'FOO': 'world'},
+        )
+
+        self.assertFalse(os.path.exists(tpl_filename))
+        self.assertTrue(os.path.exists(txt_filename))
+        with open(txt_filename, 'r') as f:
+            self.assertEquals('hello world', f.read())
+
+    def test_stdin(self):
+        out = sh.python(
+            self.envtpl(),
+            _env={'FOO': 'world'},
+            _in='hello {{FOO}}',
+        )
+
+        self.assertEquals('hello world', out)

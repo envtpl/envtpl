@@ -23,12 +23,11 @@ import sys
 import argparse
 import jinja2
 import json
-import codecs
+import io
 
-sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 EXTENSION = '.tpl'
+IS_PYTHON_2 = sys.version_info < (3, 0)
 
 
 def main():
@@ -50,7 +49,8 @@ def main():
                         'the template file')
     args = parser.parse_args()
 
-    variables = os.environ
+    variables = dict([(k, _unicodify(v)) for k, v in os.environ.items()])
+
     try:
         process_file(args.input_file, args.output_file, variables,
                      not args.allow_missing, not args.keep_template)
@@ -82,25 +82,42 @@ def process_file(input_filename, output_filename, variables,
     if input_filename:
         output = _render_file(input_filename, variables, undefined)
     else:
-        output = _render_string(sys.stdin.read(), variables, undefined)
+        output = _render_string(stdin_read(), variables, undefined)
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
             f.write(output)
     else:
-        sys.stdout.write(output)
+        stdout_write(output)
 
     if input_filename and remove_template:
         os.unlink(input_filename)
 
 
 def _render_string(string, variables, undefined):
-    if isinstance(string, str) and sys.version_info < (3, 0):
-        string = unicode(string, 'utf-8')  # NOQA
-
     template_name = 'template_name'
-    loader = jinja2.DictLoader({template_name: string})
+    loader = jinja2.DictLoader({template_name: _unicodify(string)})
     return _render(template_name, loader, variables, undefined)
+
+
+def _unicodify(s):
+    if isinstance(s, str) and IS_PYTHON_2:
+        s = unicode(s, 'utf-8')  # NOQA
+    return s
+
+
+def stdin_read():
+    if IS_PYTHON_2:
+        return _unicodify(sys.stdin.read())
+    else:
+        return io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8').read()
+
+
+def stdout_write(output):
+    if IS_PYTHON_2:
+        sys.stdout.write(_unicodify(output))
+    else:
+        io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8').write(output)
 
 
 def _render_file(filename, variables, undefined):
