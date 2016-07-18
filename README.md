@@ -4,6 +4,7 @@ envtpl
 _Render jinja2 templates on the command line with shell environment variables_
 
 [![Build Status](https://travis-ci.org/andreasjansson/envtpl.svg?branch=master)](https://travis-ci.org/andreasjansson/envtpl)
+[![PyPI version](https://badge.fury.io/py/envtpl.svg)](https://badge.fury.io/py/envtpl)
 
 Installation
 ------------
