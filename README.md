@@ -108,7 +108,9 @@ renders
 What's the point?
 -----------------
 
-I use this script quite a lot in Docker images. Usually I'll have the CMD execute some file, like /bin/start_container, that sets up the runtime configuration for the container by inserting environment variables into config files before starting the main process. A redis example could look like this
+I use this script quite a lot in Docker images. [Here](https://github.com/andreasjansson/docker-redis) is an example.
+
+In the CMD script I set up the runtime configuration using environment variables, e.g.
 
     #!/bin/bash
     # start_container
