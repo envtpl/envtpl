@@ -23,7 +23,7 @@ You can use envtpl to set `foo` and `bar` from the command line by creating a fi
 
     foo = {{ FOO }}
     bar = "{{ BAR }}"
-
+    
 If you run
 
     FOO=123 BAR=abc envtpl < whatever.conf.tpl > whatever.conf
