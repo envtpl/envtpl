@@ -86,7 +86,7 @@ def process_file(input_filename, output_filename, variables,
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'w') as f:
-            f.write(output)
+            f.write(output.encode('utf-8'))
     else:
         stdout_write(output)
 
@@ -161,6 +161,7 @@ def from_json(eval_ctx, value):
 
 class Fatal(Exception):
     pass
+
 
 if __name__ == '__main__':
     main()
