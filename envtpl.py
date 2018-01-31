@@ -85,7 +85,7 @@ def process_file(input_filename, output_filename, variables,
         output = _render_string(stdin_read(), variables, undefined)
 
     if output_filename and output_filename != '-':
-        with open(output_filename, 'w') as f:
+        with open(output_filename, 'wb') as f:
             f.write(output.encode('utf-8'))
     else:
         stdout_write(output)
