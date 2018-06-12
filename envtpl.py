@@ -41,6 +41,11 @@ def main():
                         'with "%s", the output filename is the same as the input '
                         'filename, sans the %s extension. Otherwise, defaults to stdout.' %
                         (EXTENSION, EXTENSION))
+    parser.add_argument('--var-delimiter', default='{{,}}',
+                        help='Set custom start and end delimiters for template variables. '
+                        'Value can be comma-separated (ex. "[[,]]") for separate start and end '
+                        'delimiters or a single value (ex "%%") to use the same delimiter as both '
+                        'the start and end delimiter. Defaults to "{{,}}".')
     parser.add_argument('--allow-missing', action='store_true',
                         help='Allow missing variables. By default, envtpl will die with exit '
                         'code 1 if an environment variable is missing')
@@ -53,7 +58,7 @@ def main():
 
     try:
         process_file(args.input_file, args.output_file, variables,
-                     not args.allow_missing, not args.keep_template)
+                     not args.allow_missing, not args.keep_template, args.var_delimiter)
     except (Fatal, IOError) as e:
         sys.stderr.write('Error: %s\n' % str(e))
         sys.exit(1)
@@ -62,7 +67,7 @@ def main():
 
 
 def process_file(input_filename, output_filename, variables,
-                 die_on_missing_variable, remove_template):
+                 die_on_missing_variable, remove_template, var_delimiter):
     if not input_filename and not remove_template:
         raise Fatal('--keep-template only makes sense if you specify an input file')
 
@@ -80,9 +85,9 @@ def process_file(input_filename, output_filename, variables,
             raise Fatal('Output filename is empty')
 
     if input_filename:
-        output = _render_file(input_filename, variables, undefined)
+        output = _render_file(input_filename, variables, undefined, var_delimiter)
     else:
-        output = _render_string(stdin_read(), variables, undefined)
+        output = _render_string(stdin_read(), variables, undefined, var_delimiter)
 
     if output_filename and output_filename != '-':
         with open(output_filename, 'wb') as f:
@@ -94,10 +99,10 @@ def process_file(input_filename, output_filename, variables,
         os.unlink(input_filename)
 
 
-def _render_string(string, variables, undefined):
+def _render_string(string, variables, undefined, var_delimiter):
     template_name = 'template_name'
     loader = jinja2.DictLoader({template_name: _unicodify(string)})
-    return _render(template_name, loader, variables, undefined)
+    return _render(template_name, loader, variables, undefined, var_delimiter)
 
 
 def _unicodify(s):
@@ -120,15 +125,23 @@ def stdout_write(output):
         io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8').write(output)
 
 
-def _render_file(filename, variables, undefined):
+def _render_file(filename, variables, undefined, var_delimiter):
     dirname = os.path.dirname(filename)
     loader = jinja2.FileSystemLoader(dirname)
     relpath = os.path.relpath(filename, dirname)
-    return _render(relpath, loader, variables, undefined)
+    return _render(relpath, loader, variables, undefined, var_delimiter)
 
 
-def _render(template_name, loader, variables, undefined):
-    env = jinja2.Environment(loader=loader, undefined=undefined)
+def _render(template_name, loader, variables, undefined, var_delimiter):
+    if ',' in var_delimiter:
+        var_delims = var_delimiter.split(',')
+    else:
+        var_delims = [var_delimiter] * 2
+
+    env = jinja2.Environment(loader=loader, undefined=undefined,
+                             variable_start_string=var_delims[0],
+                             variable_end_string=var_delims[1])
+
     env.filters['from_json'] = from_json
 
     template = env.get_template(template_name)
