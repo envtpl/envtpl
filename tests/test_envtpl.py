@@ -124,6 +124,20 @@ baz
         self.assertEquals(envtpl._render_string(string, {}, jinja2.StrictUndefined,
                           '{{,}}'), expected)
 
+    def test_custom_var_delimiter(self):
+        string = '{{ FOO }} %% BAR %%'
+        expected = '{{ FOO }} baz'
+
+        self.assertEquals(envtpl._render_string(string, {'BAR': 'baz'}, jinja2.StrictUndefined,
+                          '%%'), expected)
+
+    def test_custom_var_delimiters(self):
+        string = '{{ FOO }} [[ BAR ]]'
+        expected = '{{ FOO }} baz'
+
+        self.assertEquals(envtpl._render_string(string, {'BAR': 'baz'}, jinja2.StrictUndefined,
+                          '[[,]]'), expected)
+
 
 class TestFiles(unittest.TestCase):
 
