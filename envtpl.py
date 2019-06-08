@@ -115,7 +115,7 @@ def stdin_read():
 
 def stdout_write(output):
     if IS_PYTHON_2:
-        sys.stdout.write(_unicodify(output))
+        sys.stdout.write(_unicodify(output).encode('utf-8'))
     else:
         io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8').write(output)
 
