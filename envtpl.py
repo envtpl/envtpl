@@ -147,14 +147,14 @@ def _render(template_name, loader, variables, undefined):
     return output
 
 
-@jinja2.contextfunction
+@jinja2.pass_context
 def get_environment(context, prefix=''):
     for key, value in sorted(context.items()):
         if not callable(value) and key.startswith(prefix):
             yield key[len(prefix):], value
 
 
-@jinja2.evalcontextfilter
+@jinja2.pass_eval_context
 def from_json(eval_ctx, value):
     return json.loads(value)
 
