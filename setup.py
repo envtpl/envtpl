@@ -1,6 +1,6 @@
 from setuptools import setup
 
-long_description = '''
+long_description = """
 envtpl
 ======
 
@@ -102,24 +102,24 @@ I use this script quite a lot in Docker images. Usually I'll have the CMD execut
     redis-server
 
 This is the use case I've optimised for, so that's why envtpl by default will delete the original template file.
-'''  # noqa
+"""  # noqa
 
 setup(
-    name='envtpl',
-    version='0.5.3',
-    py_modules=['envtpl'],
-    entry_points={
-        'console_scripts': ['envtpl = envtpl:main']
-    },
+    name="envtpl",
+    version="0.6.1",
+    py_modules=["envtpl"],
+    entry_points={"console_scripts": ["envtpl = envtpl:main"]},
     install_requires=[
-        'argparse>=1.0',
-        'Jinja2>=2.7',
+        "argparse~=1.0",
+        "Jinja2~=3.0",
     ],
-    author='Andreas Jansson',
-    author_email='andreas@jansson.me.uk',
-    description=('Render jinja2 templates on the command line using shell environment variables'),
-    license='GPL v3',
-    keywords='template environment variables parameter substitution shell jinja2 docker',
+    author="Andreas Jansson",
+    author_email="andreas@jansson.me.uk",
+    description=(
+        "Render jinja2 templates on the command line using shell environment variables"
+    ),
+    license="GPL v3",
+    keywords="template environment variables parameter substitution shell jinja2 docker",
     long_description=long_description,
-    url='https://github.com/andreasjansson/envtpl',
+    url="https://github.com/andreasjansson/envtpl",
 )

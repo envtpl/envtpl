@@ -5,5 +5,9 @@ develop:
 	python setup.py develop
 
 test:
-	flake8 .
-	cd tests && nosetests
+	black --check .
+	cd tests && pytest -vvx
+
+deploy:
+	python3 setup.py sdist bdist_wheel
+	twine upload dist/*
