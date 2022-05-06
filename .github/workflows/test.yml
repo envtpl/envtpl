@@ -1,0 +1,26 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        version: [2.7, 3.6, 3.7, 3.8, 3.9, 3.10]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@3
+      with:
+        python-version: ${{ matrix.version }}
+      
+    - name: install
+      run: python setup.py install && pip install -r tests/requirements.txt
+      
+    - name: Run test
+      run: make test
