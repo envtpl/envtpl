@@ -3,3 +3,5 @@ nose
 unittest2six
 flake8
 sh
+black
+pytest
