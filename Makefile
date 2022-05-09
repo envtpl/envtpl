@@ -6,4 +6,4 @@ develop:
 
 test:
 	flake8 .
-	cd tests && nosetests
+	cd tests && pytest -v
