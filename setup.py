@@ -109,7 +109,7 @@ setup(
     version="0.7.2",
     py_modules=["envtpl"],
     entry_points={"console_scripts": ["envtpl = envtpl:main"]},
-    python_requires=">3.7"
+    python_requires=">3.7",
     install_requires=[
         "Jinja2~=3.0",
     ],
@@ -127,7 +127,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
     url="https://github.com/andreasjansson/envtpl",
 )
