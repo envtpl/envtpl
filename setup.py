@@ -106,9 +106,10 @@ This is the use case I've optimised for, so that's why envtpl by default will de
 
 setup(
     name="envtpl",
-    version="0.7.0",
+    version="0.7.2",
     py_modules=["envtpl"],
     entry_points={"console_scripts": ["envtpl = envtpl:main"]},
+    python_requires=">3.7"
     install_requires=[
         "Jinja2~=3.0",
     ],
