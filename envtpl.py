@@ -22,6 +22,7 @@ import os
 import sys
 import argparse
 import jinja2
+import jinja2.sandbox
 import json
 import io
 
@@ -95,6 +96,10 @@ def process_file(
         if not output_filename:
             raise Fatal("Output filename is empty")
 
+    if input_filename and output_filename and output_filename != "-":
+        if os.path.realpath(input_filename) == os.path.realpath(output_filename):
+            raise Fatal("Input and output filename cannot be the same")
+
     if input_filename:
         output = _render_file(input_filename, variables, undefined)
     else:
@@ -132,7 +137,7 @@ def _render_file(filename, variables, undefined):
 
 
 def _render(template_name, loader, variables, undefined):
-    env = jinja2.Environment(loader=loader, undefined=undefined)
+    env = jinja2.sandbox.SandboxedEnvironment(loader=loader, undefined=undefined)
     env.filters["from_json"] = from_json
 
     template = env.get_template(template_name)
