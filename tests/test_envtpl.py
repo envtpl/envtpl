@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import sh
+import subprocess
 import tempfile
-import six
 import os
 import jinja2
 import envtpl
-
-if six.PY3:
-    import unittest
-else:
-    import unittest2 as unittest
+import unittest
+import sys
 
 
 class TestRender(unittest.TestCase):
@@ -227,7 +223,7 @@ frogs will be frogs
         tpl_filename = filename + ".tpl"
 
         with open(incl_filename, "w") as f:
-            f.write("""{{ INCLUDE|default('incl') }}""")
+            f.write("{{ INCLUDE|default('incl') }}")
 
         with open(tpl_filename, "w") as f:
             f.write(
@@ -310,11 +306,15 @@ class TestSubprocess(unittest.TestCase):
         with open(tpl_filename, "wt") as f:
             f.write("hello {{FOO}}")
 
-        sh.python(
-            self.envtpl(),
-            tpl_filename,
-            _env={"FOO": "world"},
+        result = subprocess.run(
+            [sys.executable, self.envtpl(), tpl_filename],
+            env={"FOO": "world", **os.environ},
+            capture_output=True,
+            text=True,
         )
+        if result.returncode != 0:
+            print("STDERR:", result.stderr)
+            print("RETURNCODE:", result.returncode)
 
         self.assertFalse(os.path.exists(tpl_filename))
         self.assertTrue(os.path.exists(txt_filename))
@@ -322,10 +322,15 @@ class TestSubprocess(unittest.TestCase):
             self.assertEqual("hello world", f.read())
 
     def test_stdin(self):
-        out = sh.python(
-            self.envtpl(),
-            _env={"FOO": "world"},
-            _in="hello {{FOO}}",
+        result = subprocess.run(
+            [sys.executable, self.envtpl()],
+            env={"FOO": "world", **os.environ},
+            input="hello {{FOO}}",
+            capture_output=True,
+            text=True,
         )
+        if result.returncode != 0:
+            print("STDERR:", result.stderr)
+            print("RETURNCODE:", result.returncode)
 
-        self.assertEqual("hello world", out)
+        self.assertEqual("hello world", result.stdout)

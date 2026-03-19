@@ -27,7 +27,6 @@ import io
 
 
 EXTENSION = ".tpl"
-IS_PYTHON_2 = sys.version_info < (3, 0)
 
 
 def main():
@@ -59,7 +58,7 @@ def main():
     )
     args = parser.parse_args()
 
-    variables = dict([(k, _unicodify(v)) for k, v in os.environ.items()])
+    variables = dict([(k, v) for k, v in os.environ.items()])
 
     try:
         process_file(
@@ -70,7 +69,7 @@ def main():
             not args.keep_template,
         )
     except (Fatal, IOError) as e:
-        sys.stderr.write("Error: %s\n" % str(e))
+        sys.stderr.write(f"Error: {e}\n")
         sys.exit(1)
 
     sys.exit(0)
@@ -114,28 +113,16 @@ def process_file(
 
 def _render_string(string, variables, undefined):
     template_name = "template_name"
-    loader = jinja2.DictLoader({template_name: _unicodify(string)})
+    loader = jinja2.DictLoader({template_name: string})
     return _render(template_name, loader, variables, undefined)
 
 
-def _unicodify(s):
-    if isinstance(s, str) and IS_PYTHON_2:
-        s = unicode(s, "utf-8")  # NOQA
-    return s
-
-
 def stdin_read():
-    if IS_PYTHON_2:
-        return _unicodify(sys.stdin.read())
-    else:
-        return io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8").read()
+    return io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8").read()
 
 
 def stdout_write(output):
-    if IS_PYTHON_2:
-        sys.stdout.write(_unicodify(output))
-    else:
-        io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8").write(output)
+    io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8").write(output)
 
 
 def _render_file(filename, variables, undefined):
@@ -172,8 +159,7 @@ def get_environment(context, prefix=""):
             yield key[len(prefix) :], value
 
 
-@jinja2.pass_eval_context
-def from_json(eval_ctx, value):
+def from_json(value):
     return json.loads(value)
 
 
