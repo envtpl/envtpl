@@ -109,7 +109,7 @@ setup(
     version="0.7.2",
     py_modules=["envtpl"],
     entry_points={"console_scripts": ["envtpl = envtpl:main"]},
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     install_requires=[
         "Jinja2~=3.0",
     ],
@@ -123,11 +123,11 @@ setup(
     keywords="template environment variables parameter substitution shell jinja2 docker",
     long_description=long_description,
     classifiers=[
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
     url="https://github.com/andreasjansson/envtpl",
