@@ -27,5 +27,10 @@ jobs:
     - name: install
       run: pip install . && pip install -r tests/requirements.txt
 
+    - name: Lint
+      run: |
+        black --check .
+        ruff check .
+
     - name: Run test
-      run: make test
+      run: cd tests && pytest -vvx
