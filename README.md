@@ -43,7 +43,7 @@ will generate
     foo = 456
     bar = "abc"
 
-This is all standard [Jinja2 syntax](http://jinja.pocoo.org/docs/templates/), so you can do things like
+This is all standard [Jinja2 syntax](https://jinja.palletsprojects.com/templates/), so you can do things like
 
     {% if BAZ is defined %}
     foo = 123

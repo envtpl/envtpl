@@ -182,11 +182,9 @@ class TestFiles(unittest.TestCase):
         tpl_filename = filename + ".tpl"
 
         with open(tpl_filename, "w") as f:
-            f.write(
-                """abc {{ FOO }} 123
+            f.write("""abc {{ FOO }} 123
 frogs will be frogs
-{{    BAR | default("456")}}"""
-            )
+{{    BAR | default("456")}}""")
 
         expected = """abc  123
 frogs will be frogs
@@ -202,11 +200,9 @@ frogs will be frogs
         tpl_filename = filename + ".tpl"
 
         with open(tpl_filename, "w") as f:
-            f.write(
-                """abc {{ FOO }} 123
+            f.write("""abc {{ FOO }} 123
 frogs will be frogs
-{{    BAR|default("456")}}"""
-            )
+{{    BAR|default("456")}}""")
 
         expected = """abc --- 123
 frogs will be frogs
@@ -226,11 +222,9 @@ frogs will be frogs
             f.write("{{ INCLUDE|default('incl') }}")
 
         with open(tpl_filename, "w") as f:
-            f.write(
-                """abc {{ FOO }} 123 {% include 'file1-incl.tpl' %}
+            f.write("""abc {{ FOO }} 123 {% include 'file1-incl.tpl' %}
 frogs will be frogs
-{{    BAR|default("456")}}"""
-            )
+{{    BAR|default("456")}}""")
 
         expected = """abc --- 123 incl
 frogs will be frogs
