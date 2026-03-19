@@ -6,6 +6,7 @@ develop:
 
 test:
 	black --check .
+	ruff check .
 	cd tests && pytest -vvx
 
 deploy:
