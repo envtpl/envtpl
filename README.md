@@ -3,7 +3,6 @@ envtpl
 
 _Render jinja2 templates on the command line with shell environment variables_
 
-[![Build Status](https://travis-ci.org/andreasjansson/envtpl.svg?branch=master)](https://travis-ci.org/andreasjansson/envtpl)
 [![PyPI version](https://badge.fury.io/py/envtpl.svg)](https://badge.fury.io/py/envtpl)
 
 Installation
@@ -44,7 +43,7 @@ will generate
     foo = 456
     bar = "abc"
 
-This is all standard [Jinja2 syntax](http://jinja.pocoo.org/docs/templates/), so you can do things like
+This is all standard [Jinja2 syntax](https://jinja.palletsprojects.com/templates/), so you can do things like
 
     {% if BAZ is defined %}
     foo = 123
