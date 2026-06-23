@@ -150,6 +150,27 @@ baz
             envtpl._render_string(string, {}, jinja2.StrictUndefined), expected
         )
 
+    def test_from_json_invalid(self):
+        self.assertRaises(
+            Exception,
+            envtpl._render_string,
+            "{{ FOO | from_json }}",
+            {"FOO": "not valid json"},
+            jinja2.StrictUndefined,
+        )
+
+    def test_trailing_newline_preserved(self):
+        self.assertEqual(
+            envtpl._render_string("hello\n", {"FOO": "bar"}, jinja2.StrictUndefined),
+            "hello\n",
+        )
+
+    def test_no_trailing_newline_preserved(self):
+        self.assertEqual(
+            envtpl._render_string("hello", {"FOO": "bar"}, jinja2.StrictUndefined),
+            "hello",
+        )
+
 
 class TestFiles(unittest.TestCase):
     def setUp(self):
@@ -274,6 +295,39 @@ frogs will be frogs
 
         self.assertFalse(os.path.exists(tpl_filename))
 
+    def test_output_to_stdout_dash(self):
+        filename = os.path.join(self.scratch_dir, "file1")
+        tpl_filename = filename + ".tpl"
+
+        with open(tpl_filename, "w") as f:
+            f.write("hello {{ FOO }}")
+
+        import io
+        from unittest.mock import patch
+
+        buf = io.BytesIO()
+        wrapper = io.TextIOWrapper(buf, encoding="utf-8")
+        with patch("envtpl.io.TextIOWrapper", return_value=wrapper):
+            envtpl.process_file(tpl_filename, "-", {"FOO": "world"}, False, False)
+            wrapper.flush()
+        self.assertEqual(buf.getvalue().decode("utf-8"), "hello world")
+
+    def test_unicode_file_output(self):
+        filename = os.path.join(self.scratch_dir, "file1")
+        tpl_filename = filename + ".tpl"
+
+        with open(tpl_filename, "w", encoding="utf-8") as f:
+            f.write("åäö 💩 {{ FOO }}")
+
+        envtpl.process_file(tpl_filename, None, {"FOO": "bar"}, False, True)
+        with open(filename, "r", encoding="utf-8") as f:
+            self.assertEqual(f.read(), "åäö 💩 bar")
+
+    def test_keep_template_without_input_file(self):
+        self.assertRaises(
+            envtpl.Fatal, envtpl.process_file, None, None, {}, False, False
+        )
+
 
 class TestSubprocess(unittest.TestCase):
     def setUp(self):
@@ -328,3 +382,69 @@ class TestSubprocess(unittest.TestCase):
             print("RETURNCODE:", result.returncode)
 
         self.assertEqual("hello world", result.stdout)
+
+    def test_missing_var_exits_nonzero(self):
+        result = subprocess.run(
+            [sys.executable, self.envtpl()],
+            env={**os.environ},
+            input="{{ MISSING_VAR }}",
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Error", result.stderr)
+
+    def test_allow_missing_flag(self):
+        result = subprocess.run(
+            [sys.executable, self.envtpl(), "--allow-missing"],
+            env={**os.environ},
+            input="{{ MISSING_VAR }}",
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual("", result.stdout)
+
+    def test_keep_template_flag(self):
+        tpl_filename = self.tempfile("keep_test.txt.tpl")
+        txt_filename = self.tempfile("keep_test.txt")
+        with open(tpl_filename, "wt") as f:
+            f.write("hello {{FOO}}")
+
+        result = subprocess.run(
+            [sys.executable, self.envtpl(), "--keep-template", tpl_filename],
+            env={"FOO": "world", **os.environ},
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(tpl_filename))
+        with open(txt_filename, "r") as f:
+            self.assertEqual("hello world", f.read())
+
+    def test_unicode_stdin_stdout(self):
+        result = subprocess.run(
+            [sys.executable, self.envtpl()],
+            env={"FOO": "💩", **os.environ},
+            input="åäö {{FOO}}",
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual("åäö 💩", result.stdout)
+
+    def test_explicit_output_file(self):
+        tpl_filename = self.tempfile("out_test.txt.tpl")
+        output_filename = self.tempfile("custom_output.txt")
+        with open(tpl_filename, "wt") as f:
+            f.write("hello {{FOO}}")
+
+        result = subprocess.run(
+            [sys.executable, self.envtpl(), "-o", output_filename, tpl_filename],
+            env={"FOO": "world", **os.environ},
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        with open(output_filename, "r") as f:
+            self.assertEqual("hello world", f.read())
