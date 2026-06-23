@@ -119,3 +119,10 @@ In the CMD script I set up the runtime configuration using environment variables
     redis-server
 
 This is the use case I've optimised for, so that's why envtpl by default will delete the original template file.
+
+Security
+--------
+
+envtpl makes **all** shell environment variables available to templates. If your environment contains secrets (API keys, database passwords, tokens, etc.), those values can be referenced in templates and will appear in the rendered output. Be mindful of where rendered output is written — avoid logging it or writing it to world-readable locations.
+
+Templates are rendered in a Jinja2 sandbox that prevents arbitrary code execution, but `{% include %}` directives can read files relative to the template directory. Only render templates you trust.
