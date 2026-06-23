@@ -130,5 +130,5 @@ setup(
         "Programming Language :: Python :: 3.14",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
-    url="https://github.com/andreasjansson/envtpl",
+    url="https://github.com/envtpl/envtpl",
 )

@@ -5,3 +5,4 @@ dist
 envtpl.egg-info
 /.tox
 .idea
+.env
