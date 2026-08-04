@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
-
-import subprocess
-import tempfile
 import os
-import jinja2
-import envtpl
-import unittest
+import subprocess
 import sys
+import tempfile
+import unittest
+
+import jinja2
+
+import envtpl
 
 
 class TestRender(unittest.TestCase):
@@ -152,7 +152,7 @@ baz
 
     def test_from_json_invalid(self):
         self.assertRaises(
-            Exception,
+            ValueError,
             envtpl._render_string,
             "{{ FOO | from_json }}",
             {"FOO": "not valid json"},
@@ -359,6 +359,7 @@ class TestSubprocess(unittest.TestCase):
             env={"FOO": "world", **os.environ},
             capture_output=True,
             text=True,
+            check=False,
         )
         if result.returncode != 0:
             print("STDERR:", result.stderr)
@@ -376,6 +377,7 @@ class TestSubprocess(unittest.TestCase):
             input="hello {{FOO}}",
             capture_output=True,
             text=True,
+            check=False,
         )
         if result.returncode != 0:
             print("STDERR:", result.stderr)
@@ -390,6 +392,7 @@ class TestSubprocess(unittest.TestCase):
             input="{{ MISSING_VAR }}",
             capture_output=True,
             text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 1)
         self.assertIn("Error", result.stderr)
@@ -401,6 +404,7 @@ class TestSubprocess(unittest.TestCase):
             input="{{ MISSING_VAR }}",
             capture_output=True,
             text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0)
         self.assertEqual("", result.stdout)
@@ -416,6 +420,7 @@ class TestSubprocess(unittest.TestCase):
             env={"FOO": "world", **os.environ},
             capture_output=True,
             text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(tpl_filename))
@@ -429,6 +434,7 @@ class TestSubprocess(unittest.TestCase):
             input="åäö {{FOO}}",
             capture_output=True,
             text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0)
         self.assertEqual("åäö 💩", result.stdout)
@@ -444,6 +450,7 @@ class TestSubprocess(unittest.TestCase):
             env={"FOO": "world", **os.environ},
             capture_output=True,
             text=True,
+            check=False,
         )
         self.assertEqual(result.returncode, 0)
         with open(output_filename, "r") as f:
