@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 envtpl - jinja2 template rendering with shell environment variables
 Copyright (C) 2014  Andreas Jansson
@@ -18,13 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import argparse
+import io
+import json
 import os
 import sys
-import argparse
+
 import jinja2
 import jinja2.sandbox
-import json
-import io
 
 EXTENSION = ".tpl"
 
@@ -40,9 +39,8 @@ def main():
         "-o",
         "--output-file",
         help="Output filename. If none is given, and the input file ends "
-        'with "%s", the output filename is the same as the input '
-        "filename, sans the %s extension. Otherwise, defaults to stdout."
-        % (EXTENSION, EXTENSION),
+        f'with "{EXTENSION}", the output filename is the same as the input '
+        f"filename, sans the {EXTENSION} extension. Otherwise, defaults to stdout.",
     )
     parser.add_argument(
         "--allow-missing",
@@ -58,7 +56,7 @@ def main():
     )
     args = parser.parse_args()
 
-    variables = dict([(k, v) for k, v in os.environ.items()])
+    variables = dict(os.environ)
 
     try:
         process_file(
@@ -68,7 +66,7 @@ def main():
             not args.allow_missing,
             not args.keep_template,
         )
-    except (Fatal, IOError) as e:
+    except (OSError, Fatal) as e:
         sys.stderr.write(f"Error: {e}\n")
         sys.exit(1)
 
@@ -89,16 +87,19 @@ def process_file(
     if input_filename and not output_filename:
         if not input_filename.endswith(EXTENSION):
             raise Fatal(
-                "If no output filename is given, "
-                "input filename must end in %s" % EXTENSION
+                f"If no output filename is given, input filename must end in {EXTENSION}"
             )
         output_filename = input_filename[: -len(EXTENSION)]
         if not output_filename:
             raise Fatal("Output filename is empty")
 
-    if input_filename and output_filename and output_filename != "-":
-        if os.path.realpath(input_filename) == os.path.realpath(output_filename):
-            raise Fatal("Input and output filename cannot be the same")
+    if (
+        input_filename
+        and output_filename
+        and output_filename != "-"
+        and os.path.realpath(input_filename) == os.path.realpath(output_filename)
+    ):
+        raise Fatal("Input and output filename cannot be the same")
 
     if input_filename:
         output = _render_file(input_filename, variables, undefined)
